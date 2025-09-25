@@ -1,45 +1,32 @@
+# import websocket
+#
+# def on_message(ws, message):
+#     print(f"收到服务端消息: {message}")
+#
+# def on_open(ws):
+#     print("连接成功，发送消息...")
+#     ws.send("你好，服务端！")
+#
+# def on_close(ws, close_status_code, close_msg):
+#     print("连接关闭")
+#
+# # 连接服务端
+# ws = websocket.WebSocketApp(
+#     "ws://localhost:8765",
+#     on_message=on_message,
+#     on_open=on_open,
+#     on_close=on_close
+# )
+#
+# ws.run_forever()
+#
 import asyncio
 import websockets
-import json
-import threading
 
-
-async def send_messages(websocket, username):
-    """发送消息的协程"""
-    while True:
-        message = input("请输入消息（输入exit退出）: ")
-        if message.lower() == "exit":
-            break
-        await websocket.send(json.dumps({
-            "sender": username,
-            "message": message
-        }))
-
-
-async def receive_messages(websocket):
-    """接收消息的协程"""
-    while True:
-        message = await websocket.recv()
-        data = json.loads(message)
-        print(f"\n收到 {data['sender']} 的消息: {data['message']}")
-        print("请输入消息（输入exit退出）: ", end="", flush=True)
-
-
-async def main():
-    username = input("请输入你的用户名: ")
+async def hello():
     async with websockets.connect("ws://localhost:8765") as websocket:
-        # 启动接收消息的线程
-        receive_task = asyncio.create_task(receive_messages(websocket))
+        await websocket.send("你好，服务端！")
+        reply = await websocket.recv()
+        print(f"收到: {reply}")
 
-        # 发送消息
-        await send_messages(websocket, username)
-
-        # 取消接收任务
-        receive_task.cancel()
-        try:
-            await receive_task
-        except asyncio.CancelledError:
-            pass
-
-
-asyncio.run(main())
+asyncio.run(hello())
